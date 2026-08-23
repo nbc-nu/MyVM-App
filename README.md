@@ -1,4 +1,5 @@
-💻 MyVM | <a href="nologin.md">Images</a> | <a href="nologin.md">embed</a> | <a href="nologin.md">What´s new?</a> | <a href="nologin.md">home</a><hr>
+💻 MyVM | <a href="nologin.md">Images</a> | <a href="nologin.md">embed</a> | <a href="nologin.md">What´s new?</a> | <a href="nologin.md">home</a>
+<hr>
 # Start using now!
 open MyVM app to start!
 Donwload PWA at: https://nbc-nu.github.io/MyVM-App/home
