@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Windows 10 Pro</title>
+    <style>
+        :root { --win-blue: #0078D7; --task-bg: rgba(0,0,0,0.85); }
+        * { box-sizing: border-box; cursor: default; margin: 0; padding: 0; user-select: none; }
+        body, html { height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
+
+        /* --- 1. BOOT --- */
+        #boot { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; position: fixed; width: 100%; z-index: 9000; background: black; }
+        .win-logo-svg { width: 120px; fill: var(--win-blue); margin-bottom: 60px; }
+        .dots-loader { position: relative; width: 40px; height: 40px; }
+        .dot { position: absolute; width: 4px; height: 4px; background: white; border-radius: 50%; animation: spin 3.5s infinite; opacity: 0; }
+        @keyframes spin { 0% { transform: rotate(225deg) translate(20px); opacity: 1; } 50% { transform: rotate(540deg) translate(20px); } 100% { transform: rotate(900deg) translate(20px); opacity: 0; } }
+        .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        /* --- 2. SETUP COM LOADING REAL --- */
+        #setup { display: none; height: 100vh; background: #240a34; align-items: center; justify-content: center; position: fixed; width: 100%; z-index: 8000; }
+        .setup-win { background: #f0f0f0; width: 620px; height: 450px; box-shadow: 0 30px 80px rgba(0,0,0,0.8); display: flex; flex-direction: column; color: #333; }
+        .setup-head { background: white; padding: 10px; font-size: 12px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; }
+        .setup-body { flex: 1; padding: 40px; }
+        .progress-container { margin-top: 30px; text-align: left; }
+        .bar-bg { width: 100%; height: 20px; background: #ddd; border: 1px solid #aaa; margin-top: 10px; }
+        #bar-fill { width: 0%; height: 100%; background: var(--win-blue); transition: width 0.4s; }
+        .install-list { list-style: none; font-size: 13px; margin-top: 20px; }
+        .install-list li { margin-bottom: 8px; color: #888; }
+        .install-list li.active { color: #000; font-weight: bold; }
+
+        /* --- 3. DESKTOP --- */
+        #desktop { display: none; height: 100vh; background: url('https://wallpaperaccess.com') center/cover; position: relative; }
+        .taskbar { position: fixed; bottom: 0; width: 100%; height: 40px; background: var(--task-bg); backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: space-between; color: white; z-index: 7000; }
+        
+        /* JANELAS FUNCIONAIS */
+        .window { position: absolute; width: 500px; height: 350px; background: white; border: 1px solid #777; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; flex-direction: column; z-index: 100; transition: all 0.2s ease; }
+        .window.maximized { width: 100% !important; height: calc(100% - 40px) !important; top: 0 !important; left: 0 !important; }
+        .window.minimized { transform: scale(0.8); opacity: 0; pointer-events: none; }
+        
+        .title-bar { background: white; height: 32px; display: flex; justify-content: space-between; align-items: center; padding: 0 5px 0 10px; cursor: move; border-bottom: 1px solid #eee; color: #000; font-size: 12px; }
+        .win-btn { padding: 5px 12px; cursor: pointer; transition: 0.1s; }
+        .win-btn:hover { background: #e5e5e5; }
+        .close-btn:hover { background: #e81123; color: white; }
+        
+        .win-content { flex: 1; padding: 15px; color: #333; overflow: auto; }
+        .icon { width: 80px; text-align: center; color: white; margin: 20px; cursor: pointer; text-shadow: 1px 1px 2px black; font-size: 11px; }
+        .icon:hover { background: rgba(255,255,255,0.1); outline: 1px solid rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+    <!-- BOOT -->
+    <div id="boot">
+        <svg class="win-logo-svg" viewBox="0 0 88 88">
+            <path d="M0 12.402l35.687-4.86.016 34.423-35.67.203v-29.766zm35.697-5.262l52.303-7.14v36.866l-52.303.448v-30.174zm52.303 41.134v36.866l-52.303-7.14v-30.174l52.303.448zm-52.319.434l-35.681.203v-29.766l35.687-4.86v34.423z""")/>>
+        </svg>
+        <div class="dots-loader">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- SETUP -->
+    <div id="setup">
+        <div class="setup-win">
+            <div class="setup-head"><span>Instalação do Windows</span><span>✕</span></div>
+            <div id="setup-start" class="setup-body">
+                <h2 style="font-weight:300">Windows 10 Professional</h2>
+                <p style="font-size:13px; margin:20px 0; color:#666">Clique para iniciar a instalação limpa do sistema.</p>
+                <button style="padding:10px 40px; background:var(--win-blue); color:white; border:none; cursor:pointer;" onclick="startInstall()">Instalar agora</button>
+            </div>
+            <div id="setup-progress" class="setup-body" style="display:none">
+                <h2 style="font-weight:300">Instalando o Windows</h2>
+                <ul class="install-list">
+                    <li id="step1" class="active">Copiando arquivos...</li>
+                    <li id="step2">Preparando arquivos para instalação (0%)</li>
+                    <li id="step3">Instalando recursos...</li>
+                    <li id="step4">Concluindo...</li>
+                </ul>
+                <div class="bar-bg"><div id="bar-fill"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DESKTOP -->
+    <div id="desktop">
+        <div class="icon" onclick="openWindow('pc')">
+            <img src="https://icons8.com" style="display:block; margin:0 auto 5px;">
+            <span>Este Computador</span>
+        </div>
+
+        <!-- Janela: Meu Computador -->
+        <div id="win-pc" class="window">
+            <div class="title-bar" onmousedown="initDrag(event, this)">
+                <span>Este Computador</span>
+                <div style="display:flex">
+                    <div class="win-btn" onclick="minWin('pc')">─</div>
+                    <div class="win-btn" onclick="maxWin('pc')">▢</div>
+                    <div class="win-btn close-btn" onclick="closeWin('pc')">✕</div>
+                </div>
+            </div>
+            <div class="win-content">
+                <h4 style="font-weight:400; border-bottom:1px solid #ddd; padding-bottom:5px;">Dispositivos e Unidades</h4>
+                <div style="display:flex; gap:15px; margin-top:20px; align-items:center;">
+                    <img src="https://icons8.com" width="40">
+                    <div style="flex:1">
+                        <p style="font-size:13px">Disco Local (C:)</p>
+                        <div style="width:100%; height:12px; background:#eee; margin:5px 0;"><div style="width:65%; height:100%; background:var(--win-blue);"></div></div>
+                        <small style="color:#888">142 GB livres de 250 GB</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="taskbar">
+            <div style="display:flex; height:100%; align-items:center">
+                <div style="padding:0 15px; font-size:18px">🪟</div>
+                <div style="padding:0 10px; opacity:0.7">🔍</div>
+            </div>
+            <div id="clock" style="font-size:12px; padding-right:15px; text-align:right">00:00<br>03/04/2026</div>
+        </div>
+    </div>
+
+    <script>
+        // 1. BOOT
+        setTimeout(() => { document.getElementById('boot').style.display = 'none'; document.getElementById('setup').style.display = 'flex'; }, 4000);
+
+        // 2. SETUP LOADING REAL
+        function startInstall() {
+            document.getElementById('setup-start').style.display = 'none';
+            document.getElementById('setup-progress').style.display = 'block';
+            let bar = document.getElementById('bar-fill');
+            let step2 = document.getElementById('step2');
+            let pct = 0;
+            let iv = setInterval(() => {
+                pct += Math.random() * 8;
+                if(pct > 100) pct = 100;
+                bar.style.width = pct + "%";
+                step2.innerText = `Preparando arquivos para instalação (${Math.floor(pct)}%)`;
+                if(pct >= 100) {
+                    clearInterval(iv);
+                    document.getElementById('step2').className = "";
+                    document.getElementById('step4').className = "active";
+                    setTimeout(() => { document.getElementById('setup').style.display = 'none'; document.getElementById('desktop').style.display = 'block'; }, 1500);
+                }
+            }, 500);
+        }
+
+        // 3. JANELAS (MAX/MIN/DRAG)
+        function openWindow(id) { let w = document.getElementById('win-'+id); w.style.display = 'flex'; w.style.top='100px'; w.style.left='150px'; w.classList.remove('minimized'); }
+        function closeWin(id) { document.getElementById('win-'+id).style.display = 'none'; }
+        function minWin(id) { document.getElementById('win-'+id).classList.add('minimized'); }
+        function maxWin(id) { document.getElementById('win-'+id).classList.toggle('maximized'); }
+
+        function initDrag(e, el) {
+            let win = el.parentElement; if(win.classList.contains('maximized')) return;
+            let x = e.clientX, y = e.clientY;
+            document.onmousemove = (ev) => {
+                win.style.left = (win.offsetLeft + (ev.clientX - x)) + "px";
+                win.style.top = (win.offsetTop + (ev.clientY - y)) + "px";
+                x = ev.clientX; y = ev.clientY;
+            };
+            document.onmouseup = () => document.onmousemove = null;
+        }
+
+        setInterval(() => { document.getElementById('clock').innerHTML = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + "<br>03/04/2026"; }, 1000);
+    </script>
+</body>
+</html>
+
